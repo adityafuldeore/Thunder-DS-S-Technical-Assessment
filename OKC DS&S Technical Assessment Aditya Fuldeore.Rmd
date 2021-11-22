@@ -1,0 +1,60 @@
+---
+title: "OKC DS&S Technical Assessment"
+author: "Aditya Fuldeore"
+date: "11/22/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+library(tidyverse)
+shots_data <- read_csv("shots_data.csv")
+head(shots_data)
+```
+
+```{r shot zones team A} 
+
+shot_dist <- function(x, y) {
+  dist <- sqrt(x^2 + y^2)
+  return(dist)
+}
+
+shots_zone_add <- shots_data %>% 
+  mutate(shot_zones = ifelse( (y <= 7.8) & (abs(x) > 22), "C3", ifelse( shot_dist(x,y) > 23.75, "NC3", "2PT")))
+
+tmA <- shots_zone_add %>% filter(team == "Team A") %>% 
+  group_by(shot_zones) %>% 
+  summarize(fgm = sum(fgmade), fga = n(), 
+            shot_distribution = 
+              paste0(round(100*fga/nrow(shots_zone_add %>% filter(team == "Team A")),1), "%")) %>% 
+  mutate(eFG = paste0(round(100*ifelse(shot_zones != "2PT", (fgm + (0.5*fgm))/fga, (fgm)/fga),1), "%"))
+
+#Team A shot distribution and eFG% by zone
+tmA
+
+```
+
+```{r shot zones team B} 
+
+
+tmB <- shots_zone_add %>% filter(team == "Team B") %>% 
+  group_by(shot_zones) %>% 
+  summarize(fgm = sum(fgmade), fga = n(), 
+            shot_distribution = 
+              paste0(round(100*fga/nrow(shots_zone_add %>% filter(team == "Team B")),1), "%")) %>% 
+  mutate(eFG = paste0(round(100*ifelse(shot_zones != "2PT", (fgm + (0.5*fgm))/fga, (fgm)/fga),1), "%"))
+
+#Team B shot distribution and eFG% by zone
+tmB 
+
+```
